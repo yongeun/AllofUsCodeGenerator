@@ -57,6 +57,11 @@ def main():
 
         with col1:
             st.subheader("Exposure Variables")
+            exposure_type = st.selectbox(
+                "Exposure Variable Type",
+                ["Condition", "Medication", "Procedure"],
+                key="exposure_type"
+            )
             exposure_var = st.text_input("Exposure Variable SNOMED Code", "44823375")
 
             st.subheader("Confounding Factors")
@@ -70,7 +75,20 @@ def main():
 
         with col2:
             st.subheader("Outcome Variables")
+            outcome_type = st.selectbox(
+                "Outcome Variable Type",
+                ["Condition", "Medication", "Procedure"],
+                key="outcome_type"
+            )
             outcome_var = st.text_input("Outcome Variable SNOMED Code", "35683383")
+
+            st.subheader("Exclusion Criteria")
+            exclusion_type = st.selectbox(
+                "Exclusion Variable Type",
+                ["None", "Condition", "Medication", "Procedure"],
+                key="exclusion_type"
+            )
+            exclusion_var = st.text_input("Exclusion Variable SNOMED Code (optional)", "")
 
             st.subheader("Additional Settings")
             include_visualization = st.checkbox("Include Visualizations", value=True)
@@ -83,7 +101,11 @@ def main():
         # Create configuration dictionary
         config = {
             "exposure_var": [int(exposure_var)],
+            "exposure_type": exposure_type.lower(),
             "outcome_var": [int(outcome_var)],
+            "outcome_type": outcome_type.lower(),
+            "exclusion_var": [int(exclusion_var)] if exclusion_var and exclusion_type != "None" else [],
+            "exclusion_type": exclusion_type.lower() if exclusion_type != "None" else None,
             "confounders": {
                 "age": include_age,
                 "sex": include_sex,
