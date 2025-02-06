@@ -8,6 +8,7 @@ dependencies = [
     "google-cloud-storage>=3.0.0",
     "matplotlib>=3.10.0",
     "numpy>=2.2.2",
+    "openai>=1.61.1",
     "pandas>=2.2.3",
     "psycopg2-binary>=2.9.10",
     "scipy>=1.15.1",

@@ -1,7 +1,7 @@
 def get_python_template(config):
     """Generate Python code template"""
 
-    code = f"""import os
+    code = """import os
 import pandas as pd
 import numpy as np
 from google.cloud import storage
@@ -10,8 +10,8 @@ import seaborn as sns
 from scipy import stats
 
 # Configuration
-EXPOSURE_VARS = {config['exposure_var']}
-OUTCOME_VARS = {config['outcome_var']}
+EXPOSURE_VARS = {exposure_vars}
+OUTCOME_VARS = {outcome_vars}
 
 def load_data():
     # Initialize Google Cloud Storage client
@@ -29,7 +29,6 @@ def preprocess_data(df):
     # Data type conversions
     categorical_cols = ['race_cat', 'ethnicity_cat', 'sex_cat']
     df[categorical_cols] = df[categorical_cols].astype('category')
-
     return df
 
 def perform_analysis(df):
@@ -40,7 +39,7 @@ def perform_analysis(df):
     # Chi-square test for categorical variables
     contingency = pd.crosstab(df['var_1'], df['var_2'])
     chi2, p_value = stats.chi2_contingency(contingency)
-    print(f"\\nChi-square test p-value: {p_value:.4f}")
+    print(f"\\nChi-square test p-value: {{p_value:.4f}}")
 
     # Logistic regression
     from statsmodels.formula.api import logit
@@ -48,7 +47,11 @@ def perform_analysis(df):
     results = model.fit()
     print("\\nLogistic Regression Results:")
     print(results.summary())
-"""
+
+""".format(
+        exposure_vars=config['exposure_var'],
+        outcome_vars=config['outcome_var']
+    )
 
     if config['include_visualization']:
         code += """
@@ -79,11 +82,10 @@ def main():
 
     # Perform analysis
     perform_analysis(df)
-    """
+"""
 
     if config['include_visualization']:
-        code += """
-    # Create visualizations
+        code += """    # Create visualizations
     create_visualizations(df)
 """
 
