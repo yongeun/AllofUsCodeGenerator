@@ -131,57 +131,61 @@ def main():
             "include_advanced_stats": include_advanced_stats
         }
 
-        # Generate both Python and R code
-        python_code = generate_python_code(config)
-        r_code = generate_r_code(config)
+        try:
+            # Generate both Python and R code
+            python_code = generate_python_code(config)
+            r_code = generate_r_code(config)
 
-        # Save analysis to database
-        analysis_id = save_analysis(
-            config=config,
-            python_code=python_code,
-            r_code=r_code,
-            description=description
-        )
+            # Save analysis to database
+            analysis_id = save_analysis(
+                config=config,
+                python_code=python_code,
+                r_code=r_code,
+                description=description
+            )
 
-        st.success(f"Analysis saved with ID: {analysis_id}")
+            st.success(f"Analysis saved with ID: {analysis_id}")
 
-        # Display Python code with copy button
-        st.markdown("""
-            <div class="code-container">
-                <div class="code-header">
-                    <h3>1. Python Code (Data Preparation)</h3>
-                    <div class="code-buttons">
-                        <button class="copy-button" data-clipboard-text='{}'>
-                            Copy Python Code
-                        </button>
-                        {}
+            # Display Python code with copy button
+            st.markdown("""
+                <div class="code-container">
+                    <div class="code-header">
+                        <h3>1. Python Code (Data Preparation)</h3>
+                        <div class="code-buttons">
+                            <button class="copy-button" data-clipboard-text='{}'>
+                                Copy Python Code
+                            </button>
+                            {}
+                        </div>
                     </div>
                 </div>
-            </div>
-        """.format(python_code.replace("'", "&#39;"), create_download_link(python_code, "data_preparation.py")), unsafe_allow_html=True)
+            """.format(python_code.replace("'", "&#39;"), create_download_link(python_code, "data_preparation.py")), unsafe_allow_html=True)
 
-        st.code(python_code, language="python")
+            st.code(python_code, language="python")
 
-        # Display R code with copy button
-        st.markdown("""
-            <div class="code-container">
-                <div class="code-header">
-                    <h3>2. R Code (Statistical Analysis)</h3>
-                    <div class="code-buttons">
-                        <button class="copy-button" data-clipboard-text='{}'>
-                            Copy R Code
-                        </button>
-                        {}
+            # Display R code with copy button
+            st.markdown("""
+                <div class="code-container">
+                    <div class="code-header">
+                        <h3>2. R Code (Statistical Analysis)</h3>
+                        <div class="code-buttons">
+                            <button class="copy-button" data-clipboard-text='{}'>
+                                Copy R Code
+                            </button>
+                            {}
+                        </div>
                     </div>
                 </div>
-            </div>
-        """.format(r_code.replace("'", "&#39;"), create_download_link(r_code, "statistical_analysis.R")), unsafe_allow_html=True)
+            """.format(r_code.replace("'", "&#39;"), create_download_link(r_code, "statistical_analysis.R")), unsafe_allow_html=True)
 
-        st.code(r_code, language="r")
+            st.code(r_code, language="r")
 
-        # Preview Analysis section
-        if st.checkbox("Preview Analysis Results"):
-            preview_analysis(config)
+            # Preview Analysis section
+            if st.checkbox("Preview Analysis Results"):
+                preview_analysis(config)
+
+        except Exception as e:
+            st.error(f"Error generating code: {str(e)}")
 
 if __name__ == "__main__":
     main()
