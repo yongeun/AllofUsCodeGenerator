@@ -1,93 +1,52 @@
 def get_r_template(config):
-    """Generate R code template"""
-    
-    code = f"""library(tidyverse)
-library(finalfit)
-library(googleCloudStorageR)
-library(haven)
+    """Generate R code template for statistical analysis"""
 
-# Configuration
-exposure_vars <- c({', '.join(map(str, config['exposure_var']))})
-outcome_vars <- c({', '.join(map(str, config['outcome_var']))})
+    code = """install.packages("finalfit")
+library("finalfit")
+library("tidyverse")
 
-# Set up Google Cloud Storage
-gcs_global_bucket(Sys.getenv("WORKSPACE_BUCKET"))
+# This code copies a file from your Google Bucket into a dataframe
 
-# Load data
-load_data <- function() {{
-  temp_file <- tempfile(fileext = ".csv")
-  gcs_get_object("data/ehr_df.csv", saveToDisk = temp_file)
-  df <- read_csv(temp_file)
-  unlink(temp_file)
-  return(df)
-}}
+# Name of the file in your google bucket
+name_of_file_in_bucket <- 'ehr_df.csv'
 
-# Preprocess data
-preprocess_data <- function(df) {{
-  df %>%
-    mutate(
-      across(c(race_cat, ethnicity_cat, sex_cat), as.factor),
-      var_1 = as.factor(var_1),
-      var_2 = as.factor(var_2)
-    )
-}}
+########################################################################
+##
+################# DON'T CHANGE FROM HERE ###############################
+##
+########################################################################
 
-# Perform analysis
-perform_analysis <- function(df) {{
-  # Summary statistics
-  summary_stats <- df %>%
-    summary_factorlist(dependent = "var_2",
-                      explanatory = c("var_1", "age", "sex_cat", "race_cat", "ethnicity_cat"))
-  print(summary_stats)
-  
-  # Logistic regression
-  model <- df %>%
-    finalfit(dependent = "var_2",
-            explanatory = c("var_1", "age", "sex_cat", "race_cat", "ethnicity_cat"))
-  print(model)
-}}
+# Get the bucket name
+my_bucket <- Sys.getenv('WORKSPACE_BUCKET')
+
+# Copy the file from current workspace to the bucket
+system(paste0("gsutil cp ", my_bucket, "/data/", name_of_file_in_bucket, " ."), intern=TRUE)
+
+# Load the file into a dataframe
+my_dataframe <- read_csv(name_of_file_in_bucket)
+head(my_dataframe)
+
+ehr_df <- my_dataframe
+
+# Convert variables to factors
+ehr_df$age_group_code <- as.factor(ehr_df$age_group_code)
+ehr_df$race_cat <- as.factor(ehr_df$race_cat)
+ehr_df$ethnicity_cat <- as.factor(ehr_df$ethnicity_cat)
+ehr_df$sex_cat <- as.factor(ehr_df$sex_cat)
+ehr_df$var_1 <- as.factor(ehr_df$var_1)
+ehr_df$var_2 <- as.factor(ehr_df$var_2)
+
+# Univariable analysis for exposure variable
+explanatory <- c("age", "age_group_code", "race_cat", "ethnicity_cat", "sex_cat")
+dependent <- "var_1"
+ehr_df %>%
+    summary_factorlist(dependent, explanatory, p=TRUE, na_include=TRUE)
+
+# Multivariable analysis for outcome
+explanatory <- c("var_1", "age_group_code", "race_cat", "ethnicity_cat", "sex_cat")
+dependent <- "var_2"
+ehr_df %>% 
+    finalfit(dependent, explanatory, dependent_label_prefix = "")
 """
-    
-    if config['include_visualization']:
-        code += """
-# Create visualizations
-create_visualizations <- function(df) {
-  # Create visualization directory
-  dir.create("visualizations", showWarnings = FALSE)
-  
-  # Age distribution plot
-  pdf("visualizations/age_distribution.pdf")
-  ggplot(df, aes(x = age, fill = var_2)) +
-    geom_histogram(position = "stack") +
-    theme_minimal() +
-    labs(title = "Age Distribution by Outcome")
-  dev.off()
-  
-  # Outcome by exposure
-  pdf("visualizations/outcome_by_exposure.pdf")
-  ggplot(df, aes(x = var_1, fill = var_2)) +
-    geom_bar(position = "dodge") +
-    theme_minimal() +
-    labs(title = "Outcome by Exposure")
-  dev.off()
-}
-"""
-    
-    code += """
-# Main execution
-main <- function() {
-  df <- load_data()
-  df <- preprocess_data(df)
-  perform_analysis(df)
-"""
-    
-    if config['include_visualization']:
-        code += """  create_visualizations(df)
-"""
-    
-    code += """}
 
-main()
-"""
-    
     return code
