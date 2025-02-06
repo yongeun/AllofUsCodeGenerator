@@ -15,6 +15,37 @@ def verify_password(password: str, hashed_password: str) -> bool:
         st.error(f"Password verification error: {str(e)}")
         return False
 
+def create_user(db, username: str, password: str, email: str = None):
+    """Create a new user"""
+    try:
+        # Check if username already exists
+        result = db.execute(
+            text("SELECT username FROM users WHERE username = :username"),
+            {"username": username}
+        ).fetchone()
+
+        if result:
+            return False, "Username already exists"
+
+        hashed_password = hash_password(password)
+
+        db.execute(
+            text("""
+                INSERT INTO users (username, password_hash, email)
+                VALUES (:username, :password_hash, :email)
+            """),
+            {
+                "username": username,
+                "password_hash": hashed_password,
+                "email": email
+            }
+        )
+        db.commit()
+        return True, "User created successfully"
+    except Exception as e:
+        st.error(f"Error creating user: {str(e)}")
+        return False, f"Error creating user: {str(e)}"
+
 def create_demo_user(db):
     """Create demo user if it doesn't exist"""
     try:
@@ -68,20 +99,52 @@ def login_user():
     if not st.session_state.logged_in:
         st.markdown("## 🔐 Login")
 
-        with st.form("login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Login")
+        # Create tabs for login and signup
+        tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
-            if submit:
-                if verify_user(username, password):
-                    st.session_state.logged_in = True
-                    st.session_state.username = username
-                    st.success("Successfully logged in!")
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password")
-                    return False
+        with tab1:
+            with st.form("login_form"):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                submit = st.form_submit_button("Login")
+
+                if submit:
+                    if verify_user(username, password):
+                        st.session_state.logged_in = True
+                        st.session_state.username = username
+                        st.success("Successfully logged in!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid username or password")
+                        return False
+
+        with tab2:
+            with st.form("signup_form"):
+                new_username = st.text_input("Choose Username")
+                new_password = st.text_input("Choose Password", type="password")
+                confirm_password = st.text_input("Confirm Password", type="password")
+                email = st.text_input("Email (optional)")
+                signup_submit = st.form_submit_button("Sign Up")
+
+                if signup_submit:
+                    if not new_username or not new_password:
+                        st.error("Username and password are required")
+                        return False
+                    if new_password != confirm_password:
+                        st.error("Passwords do not match")
+                        return False
+                    if len(new_password) < 6:
+                        st.error("Password must be at least 6 characters long")
+                        return False
+
+                    db = next(get_db())
+                    success, message = create_user(db, new_username, new_password, email)
+                    if success:
+                        st.success(message)
+                        st.info("Please log in with your new credentials")
+                    else:
+                        st.error(message)
+                    db.close()
         return False
     return True
 
