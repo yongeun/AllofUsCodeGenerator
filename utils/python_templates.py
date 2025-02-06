@@ -39,8 +39,8 @@ def perform_analysis(df):
 
     # Chi-square test for categorical variables
     contingency = pd.crosstab(df['var_1'], df['var_2'])
-    chi2, pval = stats.chi2_contingency(contingency)
-    print(f"\\nChi-square test p-value: {pval:.4f}")
+    chi2, p_value = stats.chi2_contingency(contingency)
+    print(f"\\nChi-square test p-value: {p_value:.4f}")
 
     # Logistic regression
     from statsmodels.formula.api import logit
