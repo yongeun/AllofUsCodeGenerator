@@ -4,11 +4,14 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "alembic>=1.14.1",
     "google-cloud-storage>=3.0.0",
     "matplotlib>=3.10.0",
     "numpy>=2.2.2",
     "pandas>=2.2.3",
+    "psycopg2-binary>=2.9.10",
     "scipy>=1.15.1",
     "seaborn>=0.13.2",
+    "sqlalchemy>=2.0.37",
     "streamlit>=1.42.0",
 ]
