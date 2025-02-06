@@ -11,14 +11,19 @@ def verify_user(username: str, password: str) -> bool:
     """Verify user credentials against database"""
     db = next(get_db())
     try:
+        # Add debug logging
+        input_hash = hash_password(password)
+        st.write(f"Debug - Generated hash: {input_hash}")
+
         # Use text() for raw SQL and proper parameter binding
         result = db.execute(
             text("SELECT password_hash FROM users WHERE username = :username"),
             {"username": username}
         ).fetchone()
 
-        if result and result[0] == hash_password(password):
-            return True
+        if result:
+            st.write(f"Debug - Stored hash: {result[0]}")
+            return result[0] == input_hash
         return False
     except Exception as e:
         st.error(f"Database error: {str(e)}")
