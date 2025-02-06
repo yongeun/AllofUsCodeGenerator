@@ -13,7 +13,11 @@ ehr_query = f\"\"\"    SELECT
         person.birth_datetime AS date_of_birth,
         p_race_concept.concept_name AS race,
         p_ethnicity_concept.concept_name AS ethnicity,
-        p_sex_at_birth_concept.concept_name AS sex_at_birth
+        p_sex_at_birth_concept.concept_name AS sex_at_birth,
+        p_insurance.concept_name AS insurance_status,
+        p_education.concept_name AS education_status,
+        p_income.concept_name AS income_status,
+        p_smoking.concept_name AS smoking_status
     FROM {{os.environ['WORKSPACE_CDR']}}.person person
     LEFT JOIN {{os.environ['WORKSPACE_CDR']}}.concept p_race_concept
         ON person.race_concept_id = p_race_concept.concept_id
@@ -21,6 +25,14 @@ ehr_query = f\"\"\"    SELECT
         ON person.ethnicity_concept_id = p_ethnicity_concept.concept_id
     LEFT JOIN {{os.environ['WORKSPACE_CDR']}}.concept p_sex_at_birth_concept
         ON person.sex_at_birth_concept_id = p_sex_at_birth_concept.concept_id
+    LEFT JOIN {{os.environ['WORKSPACE_CDR']}}.concept p_insurance
+        ON person.insurance_concept_id = p_insurance.concept_id
+    LEFT JOIN {{os.environ['WORKSPACE_CDR']}}.concept p_education
+        ON person.education_concept_id = p_education.concept_id
+    LEFT JOIN {{os.environ['WORKSPACE_CDR']}}.concept p_income
+        ON person.income_concept_id = p_income.concept_id
+    LEFT JOIN {{os.environ['WORKSPACE_CDR']}}.concept p_smoking
+        ON person.smoking_status_concept_id = p_smoking.concept_id
     WHERE person.PERSON_ID IN (
         SELECT DISTINCT person_id
         FROM {{os.environ['WORKSPACE_CDR']}}.cb_search_person
@@ -42,38 +54,61 @@ age_bins = [18, 35, 50, 65, float('inf')]
 age_labels = ['18-34', '35-49', '50-64', '65+']
 ehr_df['age_group'] = pd.cut(ehr_df['age'], bins=age_bins, labels=age_labels, right=False)
 
-# Function to categorize age group into numeric codes
 def categorize_age_group(age_group_label):
     mapping = {{'18-34': 0, '35-49': 1, '50-64': 2, '65+': 3}}
     return mapping.get(age_group_label, 99)
 
-# Categorization functions
-def categorize_race(race):
-    if pd.isna(race) or race in ['None Indicated', 'PMI: Skip', 'More than one population', 'None of these', 'I prefer not to answer']:
+def categorize_insurance(insurance):
+    if pd.isna(insurance) or insurance in ['Unknown', 'None', 'Declined to Answer']:
         return 99
     return {{
-        'White': 1,
-        'Black or African American': 2,
-        'Asian': 3,
-        'Middle Eastern or North African': 4,
-        'Native Hawaiian or Other Pacific Islander': 5
-    }}.get(race, 99)
+        'Private': 1,
+        'Medicare': 2,
+        'Medicaid': 3,
+        'Other': 4,
+        'Uninsured': 5
+    }}.get(insurance, 99)
 
-def categorize_sex(sex):
-    if pd.isna(sex) or sex in ['PMI: Skip', 'No matching concept', 'I prefer not to answer', 'None', 'Intersex']:
+def categorize_education(education):
+    if pd.isna(education) or education in ['Unknown', 'Declined to Answer']:
         return 99
-    return {{'Female': 1, 'Male': 2}}.get(sex, 99)
+    return {{
+        'Less than High School': 1,
+        'High School/GED': 2,
+        'Some College': 3,
+        'College Graduate': 4,
+        'Post-Graduate': 5
+    }}.get(education, 99)
 
-def categorize_ethnicity(ethnicity):
-    if pd.isna(ethnicity) or ethnicity in ['PMI: Skip', 'What Race Ethnicity: Race Ethnicity None Of These', 'PMI: Prefer Not To Answer', 'No matching concept']:
+def categorize_income(income):
+    if pd.isna(income) or income in ['Unknown', 'Declined to Answer']:
         return 99
-    return {{'Not Hispanic or Latino': 1, 'Hispanic or Latino': 2}}.get(ethnicity, 99)
+    return {{
+        'Less than $25,000': 1,
+        '$25,000-$49,999': 2,
+        '$50,000-$74,999': 3,
+        '$75,000-$99,999': 4,
+        '$100,000 or more': 5
+    }}.get(income, 99)
+
+def categorize_smoking(smoking):
+    if pd.isna(smoking) or smoking in ['Unknown', 'Declined to Answer']:
+        return 99
+    return {{
+        'Never Smoker': 1,
+        'Former Smoker': 2,
+        'Current Smoker': 3
+    }}.get(smoking, 99)
 
 # Apply categorization
 ehr_df['age_group_code'] = ehr_df['age_group'].apply(categorize_age_group)
 ehr_df['race_cat'] = ehr_df['race'].apply(categorize_race)
 ehr_df['sex_cat'] = ehr_df['sex_at_birth'].apply(categorize_sex)
 ehr_df['ethnicity_cat'] = ehr_df['ethnicity'].apply(categorize_ethnicity)
+ehr_df['insurance_status'] = ehr_df['insurance_status'].apply(categorize_insurance)
+ehr_df['education_status'] = ehr_df['education_status'].apply(categorize_education)
+ehr_df['income_status'] = ehr_df['income_status'].apply(categorize_income)
+ehr_df['active_smoking'] = ehr_df['smoking_status'].apply(categorize_smoking)
 
 # Add variables for association study
 variable_1 = {exposure_vars}  # Exposure variable
@@ -139,7 +174,7 @@ if variable_3:
     ehr_df = ehr_df[~ehr_df['person_id'].isin(cohort_var_3_df['person_id'])]
 
 # Keep only necessary columns
-ehr_df = ehr_df[['person_id', 'age', 'age_group_code', 'race_cat', 'ethnicity_cat', 'sex_cat', 'var_1', 'var_2']]
+ehr_df = ehr_df[['person_id', 'age', 'age_group_code', 'race_cat', 'ethnicity_cat', 'sex_cat', 'var_1', 'var_2', 'insurance_status', 'education_status', 'income_status', 'active_smoking']]
 
 # Save to Google Bucket
 destination_filename = 'ehr_df.csv'
