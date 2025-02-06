@@ -31,32 +31,32 @@ def save_analysis(config, python_code, r_code, description=""):
 def create_download_link(code, filename):
     """Create a download link for code files"""
     b64 = base64.b64encode(code.encode()).decode()
-    href = f'<a href="data:file/text;base64,{b64}" download="{filename}">Download {filename}</a>'
+    href = f'<a href="data:file/text;base64,{b64}" download="{filename}">📥 Download {filename}</a>'
     return href
 
 def main():
-    st.set_page_config(page_title="Epidemiological Analysis Code Generator", layout="wide")
+    st.set_page_config(
+        page_title="Epidemiological Analysis Code Generator",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
     # Custom CSS
-    st.markdown("""
-        <style>
-            .main {
-                padding: 2rem;
-            }
-            .stButton>button {
-                width: 100%;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+    with open('assets/style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-    st.title("Epidemiological Analysis Code Generator")
+    # Header with emoji and description
+    st.markdown("""
+        <h1>🧬 Epidemiological Analysis Code Generator</h1>
+        <p class="subtitle">Generate customized Python and R code for epidemiological studies using EHR data</p>
+    """, unsafe_allow_html=True)
 
     # Main form
     with st.form("analysis_form"):
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("Exposure Variables")
+            st.markdown("### 📊 Exposure Variables")
             exposure_type = st.selectbox(
                 "Exposure Variable Type",
                 ["Condition", "Medication", "Procedure"],
@@ -64,7 +64,7 @@ def main():
             )
             exposure_var = st.text_input("Exposure Variable SNOMED Code", "44823375")
 
-            st.subheader("Confounding Factors")
+            st.markdown("### 🔄 Confounding Factors")
             include_age = st.checkbox("Age", value=True)
             include_sex = st.checkbox("Sex", value=True)
             include_race_ethnicity = st.checkbox("Race/Ethnicity", value=True)
@@ -74,7 +74,7 @@ def main():
             include_smoking = st.checkbox("Active Smoking", value=True)
 
         with col2:
-            st.subheader("Outcome Variables")
+            st.markdown("### 📈 Outcome Variables")
             outcome_type = st.selectbox(
                 "Outcome Variable Type",
                 ["Condition", "Medication", "Procedure"],
@@ -82,7 +82,7 @@ def main():
             )
             outcome_var = st.text_input("Outcome Variable SNOMED Code", "35683383")
 
-            st.subheader("Exclusion Criteria")
+            st.markdown("### ⛔ Exclusion Criteria")
             exclusion_type = st.selectbox(
                 "Exclusion Variable Type",
                 ["None", "Condition", "Medication", "Procedure"],
@@ -90,12 +90,12 @@ def main():
             )
             exclusion_var = st.text_input("Exclusion Variable SNOMED Code (optional)", "")
 
-            st.subheader("Additional Settings")
+            st.markdown("### ⚙️ Additional Settings")
             include_visualization = st.checkbox("Include Visualizations", value=True)
             include_advanced_stats = st.checkbox("Include Advanced Statistics", value=True)
 
-        description = st.text_area("Analysis Description", "")
-        submitted = st.form_submit_button("Generate Code")
+        description = st.text_area("📝 Analysis Description", placeholder="Enter a description of your analysis...")
+        submitted = st.form_submit_button("🚀 Generate Code")
 
     if submitted:
         # Create configuration dictionary
@@ -131,20 +131,20 @@ def main():
             description=description
         )
 
-        st.success(f"Analysis saved with ID: {analysis_id}")
+        st.success(f"✅ Analysis saved successfully with ID: {analysis_id}")
 
         # Display Python code
-        st.subheader("1. Python Code (Data Preparation)")
+        st.markdown("### 🐍 1. Python Code (Data Preparation)")
         st.code(python_code, language="python")
         st.markdown(create_download_link(python_code, "data_preparation.py"), unsafe_allow_html=True)
 
         # Display R code
-        st.subheader("2. R Code (Statistical Analysis)")
+        st.markdown("### 📊 2. R Code (Statistical Analysis)")
         st.code(r_code, language="r")
         st.markdown(create_download_link(r_code, "statistical_analysis.R"), unsafe_allow_html=True)
 
         # Preview Analysis section
-        if st.checkbox("Preview Analysis Results"):
+        if st.checkbox("🔍 Preview Analysis Results"):
             preview_analysis(config)
 
 if __name__ == "__main__":

@@ -1,46 +1,169 @@
+/* Modern color palette */
+:root {
+    --primary-color: #2E86DE;
+    --secondary-color: #54A0FF;
+    --accent-color: #0FB9B1;
+    --background-color: #F5F6FA;
+    --text-color: #2C3E50;
+    --border-color: #E1E8ED;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 /* Main container styling */
 .main {
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
+    background-color: var(--background-color);
+    min-height: 100vh;
+}
+
+/* Title styling */
+.stTitle {
+    color: var(--text-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    padding: 1rem;
+    border-bottom: 3px solid var(--primary-color);
 }
 
 /* Form styling */
 .stForm {
-    background-color: #f8f9fa;
+    background-color: white;
     padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+/* Input fields styling */
+.stTextInput > div > div {
+    border-radius: 8px !important;
+    border: 2px solid var(--border-color) !important;
+    transition: all 0.3s ease;
+}
+
+.stTextInput > div > div:focus-within {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(46, 134, 222, 0.2);
+}
+
+/* Select box styling */
+.stSelectbox > div > div {
+    border-radius: 8px !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.stSelectbox > div > div:hover {
+    border-color: var(--primary-color) !important;
 }
 
 /* Button styling */
-.stButton>button {
-    background-color: #1f77b4;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    font-weight: bold;
+.stButton > button {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.stButton>button:hover {
-    background-color: #145c8e;
+.stButton > button:hover {
+    background-color: var(--secondary-color) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-color);
 }
 
 /* Code block styling */
 .stCodeBlock {
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    padding: 1rem;
+    background-color: #2C3E50 !important;
+    border-radius: 10px !important;
+    padding: 1.5rem !important;
+    margin: 1rem 0 !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
 }
 
-/* Sidebar styling */
-.sidebar .sidebar-content {
-    background-color: #f8f9fa;
+/* Checkbox styling */
+.stCheckbox {
+    padding: 0.5rem 0;
 }
 
-/* Header styling */
-h1, h2, h3 {
-    color: #1f77b4;
-    margin-bottom: 1rem;
+.stCheckbox > label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stCheckbox > label > div {
+    border-radius: 4px;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.stCheckbox > label:hover > div {
+    border-color: var(--primary-color);
+}
+
+/* Subheader styling */
+.stSubheader {
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* Success message styling */
+.stSuccess {
+    background-color: #DFF6DD !important;
+    color: #1B4332 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    border-left: 4px solid #2D6A4F !important;
+    margin: 1rem 0 !important;
+}
+
+/* Download link styling */
+a[download] {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+a[download]:hover {
+    background-color: #0AA99F;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+/* Two-column layout improvements */
+.row-widget.stHorizontal {
+    gap: 2rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .main {
+        padding: 1rem;
+    }
+
+    .stForm {
+        padding: 1rem;
+    }
+
+    .stTitle {
+        font-size: 2rem;
+    }
 }
