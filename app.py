@@ -28,6 +28,12 @@ def save_analysis(config, python_code, r_code, description=""):
         db.commit()
         return analysis.id
 
+def create_download_link(code, filename):
+    """Create a download link for code files"""
+    b64 = base64.b64encode(code.encode()).decode()
+    href = f'<a href="data:file/text;base64,{b64}" download="{filename}">Download {filename}</a>'
+    return href
+
 def main():
     st.set_page_config(page_title="Epidemiological Analysis Code Generator", layout="wide")
 
@@ -44,10 +50,6 @@ def main():
     """, unsafe_allow_html=True)
 
     st.title("Epidemiological Analysis Code Generator")
-
-    # Sidebar for configuration
-    st.sidebar.header("Analysis Configuration")
-    language = st.sidebar.selectbox("Select Language", ["Python", "R"])
 
     # Main form
     with st.form("analysis_form"):
@@ -89,37 +91,29 @@ def main():
             "include_advanced_stats": include_advanced_stats
         }
 
-        # Generate code based on selected language
-        if language == "Python":
-            generated_code = generate_python_code(config)
-        else:
-            generated_code = generate_r_code(config)
+        # Generate both Python and R code
+        python_code = generate_python_code(config)
+        r_code = generate_r_code(config)
 
         # Save analysis to database
         analysis_id = save_analysis(
             config=config,
-            python_code=generate_python_code(config),
-            r_code=generate_r_code(config),
+            python_code=python_code,
+            r_code=r_code,
             description=description
         )
 
         st.success(f"Analysis saved with ID: {analysis_id}")
 
-        # Display generated code
-        st.subheader("Generated Code")
-        st.code(generated_code, language=language.lower())
+        # Display Python code
+        st.subheader("1. Python Code (Data Preparation)")
+        st.code(python_code, language="python")
+        st.markdown(create_download_link(python_code, "data_preparation.py"), unsafe_allow_html=True)
 
-        # Download button
-        if language == "Python":
-            file_extension = "py"
-        else:
-            file_extension = "R"
-
-        file_name = f"analysis_code.{file_extension}"
-
-        b64 = base64.b64encode(generated_code.encode()).decode()
-        href = f'<a href="data:file/text;base64,{b64}" download="{file_name}">Download Generated Code</a>'
-        st.markdown(href, unsafe_allow_html=True)
+        # Display R code
+        st.subheader("2. R Code (Statistical Analysis)")
+        st.code(r_code, language="r")
+        st.markdown(create_download_link(r_code, "statistical_analysis.R"), unsafe_allow_html=True)
 
         # Preview Analysis section
         if st.checkbox("Preview Analysis Results"):
