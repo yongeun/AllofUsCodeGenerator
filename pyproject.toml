@@ -17,4 +17,5 @@ dependencies = [
     "streamlit-authenticator>=0.4.1",
     "streamlit>=1.42.0",
     "twilio>=9.4.4",
+    "bcrypt>=4.2.1",
 ]

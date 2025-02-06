@@ -1,29 +1,30 @@
-import hashlib
+import bcrypt
 import streamlit as st
 from utils.database import get_db
 from sqlalchemy import text
 
 def hash_password(password: str) -> str:
-    """Hash password using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    """Verify password against hashed password"""
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        return False
 
 def verify_user(username: str, password: str) -> bool:
     """Verify user credentials against database"""
     db = next(get_db())
     try:
-        # Add debug logging
-        input_hash = hash_password(password)
-        st.write(f"Debug - Generated hash: {input_hash}")
-
-        # Use text() for raw SQL and proper parameter binding
         result = db.execute(
             text("SELECT password_hash FROM users WHERE username = :username"),
             {"username": username}
         ).fetchone()
 
         if result:
-            st.write(f"Debug - Stored hash: {result[0]}")
-            return result[0] == input_hash
+            return verify_password(password, result[0])
         return False
     except Exception as e:
         st.error(f"Database error: {str(e)}")
