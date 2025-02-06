@@ -37,6 +37,31 @@ def create_download_link(code, filename):
 def main():
     st.set_page_config(page_title="Epidemiological Analysis Code Generator", layout="wide")
 
+    # Add clipboard.js to the page
+    st.markdown("""
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var clipboardPython = new ClipboardJS('#copy-python');
+            var clipboardR = new ClipboardJS('#copy-r');
+
+            clipboardPython.on('success', function() {
+                document.getElementById('copy-python').innerHTML = 'Copied!';
+                setTimeout(function() {
+                    document.getElementById('copy-python').innerHTML = 'Copy Python Code';
+                }, 2000);
+            });
+
+            clipboardR.on('success', function() {
+                document.getElementById('copy-r').innerHTML = 'Copied!';
+                setTimeout(function() {
+                    document.getElementById('copy-r').innerHTML = 'Copy R Code';
+                }, 2000);
+            });
+        });
+        </script>
+    """, unsafe_allow_html=True)
+
     # Custom CSS
     st.markdown("""
         <style>
@@ -45,6 +70,33 @@ def main():
             }
             .stButton>button {
                 width: 100%;
+            }
+            .copy-button {
+                background-color: #1f77b4;
+                color: white;
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin: 0.5rem 0;
+                font-size: 0.9rem;
+            }
+            .copy-button:hover {
+                background-color: #145c8e;
+            }
+            .code-container {
+                position: relative;
+                margin: 1rem 0;
+            }
+            .code-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5rem;
+            }
+            .code-buttons {
+                display: flex;
+                gap: 1rem;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -105,15 +157,39 @@ def main():
 
         st.success(f"Analysis saved with ID: {analysis_id}")
 
-        # Display Python code
-        st.subheader("1. Python Code (Data Preparation)")
-        st.code(python_code, language="python")
-        st.markdown(create_download_link(python_code, "data_preparation.py"), unsafe_allow_html=True)
+        # Display Python code with copy button
+        st.markdown("""
+            <div class="code-container">
+                <div class="code-header">
+                    <h3>1. Python Code (Data Preparation)</h3>
+                    <div class="code-buttons">
+                        <button class="copy-button" id="copy-python" data-clipboard-target="#python-code">
+                            Copy Python Code
+                        </button>
+                        {}
+                    </div>
+                </div>
+            </div>
+        """.format(create_download_link(python_code, "data_preparation.py")), unsafe_allow_html=True)
 
-        # Display R code
-        st.subheader("2. R Code (Statistical Analysis)")
-        st.code(r_code, language="r")
-        st.markdown(create_download_link(r_code, "statistical_analysis.R"), unsafe_allow_html=True)
+        st.code(python_code, language="python", key="python-code")
+
+        # Display R code with copy button
+        st.markdown("""
+            <div class="code-container">
+                <div class="code-header">
+                    <h3>2. R Code (Statistical Analysis)</h3>
+                    <div class="code-buttons">
+                        <button class="copy-button" id="copy-r" data-clipboard-target="#r-code">
+                            Copy R Code
+                        </button>
+                        {}
+                    </div>
+                </div>
+            </div>
+        """.format(create_download_link(r_code, "statistical_analysis.R")), unsafe_allow_html=True)
+
+        st.code(r_code, language="r", key="r-code")
 
         # Preview Analysis section
         if st.checkbox("Preview Analysis Results"):
