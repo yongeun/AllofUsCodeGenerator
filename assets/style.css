@@ -1,0 +1,46 @@
+/* Main container styling */
+.main {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Form styling */
+.stForm {
+    background-color: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Button styling */
+.stButton>button {
+    background-color: #1f77b4;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.stButton>button:hover {
+    background-color: #145c8e;
+}
+
+/* Code block styling */
+.stCodeBlock {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 1rem;
+}
+
+/* Sidebar styling */
+.sidebar .sidebar-content {
+    background-color: #f8f9fa;
+}
+
+/* Header styling */
+h1, h2, h3 {
+    color: #1f77b4;
+    margin-bottom: 1rem;
+}
