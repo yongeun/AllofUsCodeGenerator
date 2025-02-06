@@ -15,29 +15,33 @@ def verify_password(password: str, hashed_password: str) -> bool:
         st.error(f"Password verification error: {str(e)}")
         return False
 
-def create_user(db, username: str, password: str, email: str = None):
+def create_user(db, email: str, password: str, username: str = None):
     """Create a new user"""
     try:
-        # Check if username already exists
+        # Check if email already exists
         result = db.execute(
-            text("SELECT username FROM users WHERE username = :username"),
-            {"username": username}
+            text("SELECT email FROM users WHERE email = :email"),
+            {"email": email}
         ).fetchone()
 
         if result:
-            return False, "Username already exists"
+            return False, "Email already registered"
 
         hashed_password = hash_password(password)
 
+        # Use email as username if none provided
+        if not username:
+            username = email.split('@')[0]
+
         db.execute(
             text("""
-                INSERT INTO users (username, password_hash, email)
-                VALUES (:username, :password_hash, :email)
+                INSERT INTO users (username, email, password_hash)
+                VALUES (:username, :email, :password_hash)
             """),
             {
                 "username": username,
-                "password_hash": hashed_password,
-                "email": email
+                "email": email,
+                "password_hash": hashed_password
             }
         )
         db.commit()
@@ -54,22 +58,22 @@ def create_demo_user(db):
 
         db.execute(
             text("""
-                INSERT INTO users (username, password_hash, email)
-                VALUES (:username, :password_hash, :email)
-                ON CONFLICT (username) DO UPDATE
+                INSERT INTO users (username, email, password_hash)
+                VALUES (:username, :email, :password_hash)
+                ON CONFLICT (email) DO UPDATE
                 SET password_hash = :password_hash
             """),
             {
                 "username": "demo_user",
-                "password_hash": hashed_password,
-                "email": "demo@example.com"
+                "email": "demo@example.com",
+                "password_hash": hashed_password
             }
         )
         db.commit()
     except Exception as e:
         st.error(f"Error creating demo user: {str(e)}")
 
-def verify_user(username: str, password: str) -> bool:
+def verify_user(email: str, password: str) -> bool:
     """Verify user credentials against database"""
     db = next(get_db())
     try:
@@ -78,8 +82,8 @@ def verify_user(username: str, password: str) -> bool:
 
         # Then verify credentials
         result = db.execute(
-            text("SELECT password_hash FROM users WHERE username = :username"),
-            {"username": username}
+            text("SELECT password_hash FROM users WHERE email = :email"),
+            {"email": email}
         ).fetchone()
 
         if result:
@@ -104,31 +108,34 @@ def login_user():
 
         with tab1:
             with st.form("login_form"):
-                username = st.text_input("Username")
+                email = st.text_input("Email")
                 password = st.text_input("Password", type="password")
                 submit = st.form_submit_button("Login")
 
                 if submit:
-                    if verify_user(username, password):
+                    if verify_user(email, password):
                         st.session_state.logged_in = True
-                        st.session_state.username = username
+                        st.session_state.username = email.split('@')[0]  # Use email prefix as display name
                         st.success("Successfully logged in!")
                         st.rerun()
                     else:
-                        st.error("Invalid username or password")
+                        st.error("Invalid email or password")
                         return False
 
         with tab2:
             with st.form("signup_form"):
-                new_username = st.text_input("Choose Username")
+                new_email = st.text_input("Email")
+                username = st.text_input("Display Name (optional)")
                 new_password = st.text_input("Choose Password", type="password")
                 confirm_password = st.text_input("Confirm Password", type="password")
-                email = st.text_input("Email (optional)")
                 signup_submit = st.form_submit_button("Sign Up")
 
                 if signup_submit:
-                    if not new_username or not new_password:
-                        st.error("Username and password are required")
+                    if not new_email or not new_password:
+                        st.error("Email and password are required")
+                        return False
+                    if not '@' in new_email or not '.' in new_email:
+                        st.error("Please enter a valid email address")
                         return False
                     if new_password != confirm_password:
                         st.error("Passwords do not match")
@@ -138,10 +145,10 @@ def login_user():
                         return False
 
                     db = next(get_db())
-                    success, message = create_user(db, new_username, new_password, email)
+                    success, message = create_user(db, new_email, new_password, username)
                     if success:
                         st.success(message)
-                        st.info("Please log in with your new credentials")
+                        st.info("Please log in with your email and password")
                     else:
                         st.error(message)
                     db.close()
