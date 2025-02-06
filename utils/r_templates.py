@@ -21,7 +21,8 @@ def get_r_template(config):
     # Convert list to R vector string
     explanatory_vars_str = '", "'.join(explanatory_vars)
 
-    code = """install.packages("finalfit")
+    # Create the R code template with properly escaped % characters
+    code = f"""install.packages("finalfit")
 library("finalfit")
 library("tidyverse")
 
@@ -64,16 +65,16 @@ ehr_df$var_1 <- as.factor(ehr_df$var_1)
 ehr_df$var_2 <- as.factor(ehr_df$var_2)
 
 # Univariable analysis for exposure variable
-explanatory <- c("%s")
+explanatory <- c("{explanatory_vars_str}")
 dependent <- "var_1"
 ehr_df %>%
     summary_factorlist(dependent, explanatory, p=TRUE, na_include=TRUE)
 
 # Multivariable analysis for outcome
-explanatory <- c("var_1", "%s")
+explanatory <- c("var_1", "{explanatory_vars_str}")
 dependent <- "var_2"
 ehr_df %>% 
     finalfit(dependent, explanatory, dependent_label_prefix = "")
-""" % (explanatory_vars_str, explanatory_vars_str)
+"""
 
     return code
