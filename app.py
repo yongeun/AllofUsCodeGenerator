@@ -42,22 +42,7 @@ def main():
         <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var clipboardPython = new ClipboardJS('#copy-python');
-            var clipboardR = new ClipboardJS('#copy-r');
-
-            clipboardPython.on('success', function() {
-                document.getElementById('copy-python').innerHTML = 'Copied!';
-                setTimeout(function() {
-                    document.getElementById('copy-python').innerHTML = 'Copy Python Code';
-                }, 2000);
-            });
-
-            clipboardR.on('success', function() {
-                document.getElementById('copy-r').innerHTML = 'Copied!';
-                setTimeout(function() {
-                    document.getElementById('copy-r').innerHTML = 'Copy R Code';
-                }, 2000);
-            });
+            new ClipboardJS('.copy-button');
         });
         </script>
     """, unsafe_allow_html=True)
@@ -97,6 +82,9 @@ def main():
             .code-buttons {
                 display: flex;
                 gap: 1rem;
+            }
+            .stMarkdown pre {
+                margin-bottom: 0;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -163,16 +151,16 @@ def main():
                 <div class="code-header">
                     <h3>1. Python Code (Data Preparation)</h3>
                     <div class="code-buttons">
-                        <button class="copy-button" id="copy-python" data-clipboard-target="#python-code">
+                        <button class="copy-button" data-clipboard-text='{}'>
                             Copy Python Code
                         </button>
                         {}
                     </div>
                 </div>
             </div>
-        """.format(create_download_link(python_code, "data_preparation.py")), unsafe_allow_html=True)
+        """.format(python_code.replace("'", "&#39;"), create_download_link(python_code, "data_preparation.py")), unsafe_allow_html=True)
 
-        st.code(python_code, language="python", key="python-code")
+        st.code(python_code, language="python")
 
         # Display R code with copy button
         st.markdown("""
@@ -180,16 +168,16 @@ def main():
                 <div class="code-header">
                     <h3>2. R Code (Statistical Analysis)</h3>
                     <div class="code-buttons">
-                        <button class="copy-button" id="copy-r" data-clipboard-target="#r-code">
+                        <button class="copy-button" data-clipboard-text='{}'>
                             Copy R Code
                         </button>
                         {}
                     </div>
                 </div>
             </div>
-        """.format(create_download_link(r_code, "statistical_analysis.R")), unsafe_allow_html=True)
+        """.format(r_code.replace("'", "&#39;"), create_download_link(r_code, "statistical_analysis.R")), unsafe_allow_html=True)
 
-        st.code(r_code, language="r", key="r-code")
+        st.code(r_code, language="r")
 
         # Preview Analysis section
         if st.checkbox("Preview Analysis Results"):
