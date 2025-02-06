@@ -1,6 +1,26 @@
 def get_r_template(config):
     """Generate R code template for statistical analysis"""
 
+    # Build list of explanatory variables based on selected confounders
+    explanatory_vars = []
+    if config['confounders']['age']:
+        explanatory_vars.extend(['age', 'age_group_code'])
+    if config['confounders']['sex']:
+        explanatory_vars.append('sex_cat')
+    if config['confounders']['race_ethnicity']:
+        explanatory_vars.extend(['race_cat', 'ethnicity_cat'])
+    if config['confounders']['insurance']:
+        explanatory_vars.append('insurance_status')
+    if config['confounders']['income']:
+        explanatory_vars.append('income_status')
+    if config['confounders']['education']:
+        explanatory_vars.append('education_status')
+    if config['confounders']['smoking']:
+        explanatory_vars.append('active_smoking')
+
+    # Convert list to R vector string
+    explanatory_vars_str = '", "'.join(explanatory_vars)
+
     code = """install.packages("finalfit")
 library("finalfit")
 library("tidyverse")
@@ -44,18 +64,16 @@ ehr_df$var_1 <- as.factor(ehr_df$var_1)
 ehr_df$var_2 <- as.factor(ehr_df$var_2)
 
 # Univariable analysis for exposure variable
-explanatory <- c("age", "age_group_code", "race_cat", "ethnicity_cat", "sex_cat",
-                "insurance_status", "income_status", "education_status", "active_smoking")
+explanatory <- c("%s")
 dependent <- "var_1"
 ehr_df %>%
     summary_factorlist(dependent, explanatory, p=TRUE, na_include=TRUE)
 
 # Multivariable analysis for outcome
-explanatory <- c("var_1", "age_group_code", "race_cat", "ethnicity_cat", "sex_cat",
-                "insurance_status", "income_status", "education_status", "active_smoking")
+explanatory <- c("var_1", "%s")
 dependent <- "var_2"
 ehr_df %>% 
     finalfit(dependent, explanatory, dependent_label_prefix = "")
-"""
+""" % (explanatory_vars_str, explanatory_vars_str)
 
     return code

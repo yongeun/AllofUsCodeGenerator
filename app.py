@@ -62,8 +62,11 @@ def main():
             st.subheader("Confounding Factors")
             include_age = st.checkbox("Age", value=True)
             include_sex = st.checkbox("Sex", value=True)
-            include_race = st.checkbox("Race", value=True)
-            include_ethnicity = st.checkbox("Ethnicity", value=True)
+            include_race_ethnicity = st.checkbox("Race/Ethnicity", value=True)
+            include_insurance = st.checkbox("Insurance Status", value=True)
+            include_income = st.checkbox("Income Status", value=True)
+            include_education = st.checkbox("Education Status", value=True)
+            include_smoking = st.checkbox("Active Smoking", value=True)
 
         with col2:
             st.subheader("Outcome Variables")
@@ -84,8 +87,11 @@ def main():
             "confounders": {
                 "age": include_age,
                 "sex": include_sex,
-                "race": include_race,
-                "ethnicity": include_ethnicity
+                "race_ethnicity": include_race_ethnicity,
+                "insurance": include_insurance,
+                "income": include_income,
+                "education": include_education,
+                "smoking": include_smoking
             },
             "include_visualization": include_visualization,
             "include_advanced_stats": include_advanced_stats
