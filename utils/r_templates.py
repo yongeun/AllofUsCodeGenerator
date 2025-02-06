@@ -8,7 +8,7 @@ def get_r_template(config):
     if config['confounders']['sex']:
         explanatory_vars.append('sex_cat')
     if config['confounders']['race_ethnicity']:
-        explanatory_vars.extend(['race_cat', 'ethnicity_cat'])
+        explanatory_vars.append('raceethnicity_cat')  # Changed to combined variable
     if config['confounders']['insurance']:
         explanatory_vars.append('insurance_status')
     if config['confounders']['income']:
@@ -48,9 +48,11 @@ head(ehr_df)
 # Convert variables to factors
 # Demographic factors
 ehr_df$age_group_code <- as.factor(ehr_df$age_group_code)
-ehr_df$race_cat <- as.factor(ehr_df$race_cat)
-ehr_df$ethnicity_cat <- as.factor(ehr_df$ethnicity_cat)
 ehr_df$sex_cat <- as.factor(ehr_df$sex_cat)
+
+# Create combined race/ethnicity variable
+ehr_df$raceethnicity_cat <- paste(ehr_df$race_cat, ehr_df$ethnicity_cat, sep="_")
+ehr_df$raceethnicity_cat <- as.factor(ehr_df$raceethnicity_cat)
 
 # Socioeconomic factors
 ehr_df$insurance_status <- as.factor(ehr_df$insurance_status)
