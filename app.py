@@ -3,10 +3,9 @@ import pandas as pd
 from utils.code_templates import generate_python_code, generate_r_code
 from utils.stats import preview_analysis
 from utils.database import get_db, Analysis
-from utils.auth import login_user, logout_user
+import base64
 from contextlib import contextmanager
 from sqlalchemy.orm import Session
-import base64
 
 def get_db_session():
     """Get database session context manager"""
@@ -45,14 +44,6 @@ def main():
     # Custom CSS
     with open('assets/style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
-    # Handle authentication
-    if not login_user():
-        return
-
-    # Show logout button in sidebar
-    logout_user()
-    st.sidebar.success(f'Welcome, {st.session_state.username}!')
 
     # Header with emoji and description
     st.markdown("""
