@@ -112,9 +112,7 @@ variable_2 = {outcome_vars}   # {config['outcome_type'].title()}
 variable_3 = {exclusion_vars}  # {config['exclusion_type'].title() if config['exclusion_type'] else 'No exclusion criteria'}
 
 def create_cohort_query(concept_ids, var_type):
-    """
-    Creates a SQL query for a cohort based on concept IDs using hierarchical relationships
-    """
+    '''Creates a SQL query for a cohort based on concept IDs using hierarchical relationships'''
     concept_ids_str = ', '.join(map(str, concept_ids))
 
     query = f\"\"\"
