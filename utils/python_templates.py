@@ -5,25 +5,25 @@ def get_python_template(config):
         """Get the appropriate SQL conditions based on variable type"""
         if var_type == 'medication':
             return """
-                    AND source_concept_id IN (
-                        SELECT DISTINCT concept_id 
-                        FROM {os.environ['WORKSPACE_CDR']}.concept 
-                        WHERE vocabulary_id IN ('RxNorm', 'ATC')
-                    )"""
+                AND source_concept_id IN (
+                    SELECT DISTINCT concept_id 
+                    FROM {os.environ['WORKSPACE_CDR']}.concept 
+                    WHERE vocabulary_id IN ('RxNorm', 'ATC')
+                )"""
         elif var_type == 'procedure':
             return """
-                    AND source_concept_id IN (
-                        SELECT DISTINCT concept_id 
-                        FROM {os.environ['WORKSPACE_CDR']}.concept 
-                        WHERE vocabulary_id IN ('CPT4', 'ICD10PCS', 'HCPCS')
-                    )"""
+                AND source_concept_id IN (
+                    SELECT DISTINCT concept_id 
+                    FROM {os.environ['WORKSPACE_CDR']}.concept 
+                    WHERE vocabulary_id IN ('CPT4', 'ICD10PCS', 'HCPCS')
+                )"""
         else:  # condition
             return """
-                    AND source_concept_id IN (
-                        SELECT DISTINCT concept_id 
-                        FROM {os.environ['WORKSPACE_CDR']}.concept 
-                        WHERE vocabulary_id IN ('ICD10CM', 'SNOMED')
-                    )"""
+                AND source_concept_id IN (
+                    SELECT DISTINCT concept_id 
+                    FROM {os.environ['WORKSPACE_CDR']}.concept 
+                    WHERE vocabulary_id IN ('ICD10CM', 'SNOMED')
+                )"""
 
     # Format the exposure and outcome variable lists
     exposure_vars = config['exposure_var']
@@ -112,17 +112,53 @@ variable_2 = {outcome_vars}   # {config['outcome_type'].title()}
 variable_3 = {exclusion_vars}  # {config['exclusion_type'].title() if config['exclusion_type'] else 'No exclusion criteria'}
 
 def create_cohort_query(concept_ids, var_type):
-    \"\"\"
-    Creates a SQL query for a cohort based on concept IDs and variable type
-    \"\"\"
+    """
+    Creates a SQL query for a cohort based on concept IDs using hierarchical relationships
+    """
     concept_ids_str = ', '.join(map(str, concept_ids))
 
     query = f\"\"\"
-    SELECT DISTINCT person_id 
-    FROM {{os.environ['WORKSPACE_CDR']}}.cb_search_all_events 
-    WHERE concept_id IN ({{concept_ids_str}})
-    \"\"\"
+    SELECT
+        person.person_id 
+    FROM
+        {{os.environ['WORKSPACE_CDR']}}.person person   
+    WHERE
+        person.PERSON_ID IN (SELECT
+            distinct person_id  
+        FROM
+            {{os.environ['WORKSPACE_CDR']}}.cb_search_person cb_search_person  
+        WHERE
+            cb_search_person.person_id IN (SELECT
+                criteria.person_id 
+            FROM
+                (SELECT
+                    DISTINCT person_id, entry_date, concept_id 
+                FROM
+                    {{os.environ['WORKSPACE_CDR']}}.cb_search_all_events 
+                WHERE
+                    (concept_id IN (SELECT
+                        DISTINCT c.concept_id 
+                    FROM
+                        {{os.environ['WORKSPACE_CDR']}}.cb_criteria c 
+                    JOIN
+                        (SELECT
+                            CAST(cr.id as string) AS id       
+                        FROM
+                            {{os.environ['WORKSPACE_CDR']}}.cb_criteria cr       
+                        WHERE
+                            concept_id IN ({{concept_ids_str}})       
+                            AND full_text LIKE '%_rank1]%'      ) a 
+                            ON (c.path LIKE CONCAT('%.', a.id, '.%') 
+                            OR c.path LIKE CONCAT('%.', a.id) 
+                            OR c.path LIKE CONCAT(a.id, '.%') 
+                            OR c.path = a.id) 
+                    WHERE
+                        is_standard = 0 
+                        AND is_selectable = 1) 
+                    AND is_standard = 0
+                    \"\"\"
 
+    # Add variable type-specific conditions
     if var_type == 'medication':
         query += \"\"\"
         AND source_concept_id IN (
@@ -148,6 +184,7 @@ def create_cohort_query(concept_ids, var_type):
         )
         \"\"\"
 
+    query += \"\"\")) criteria ) )\"\"\"
     return query
 
 # Initialize new columns in ehr_df for variables
